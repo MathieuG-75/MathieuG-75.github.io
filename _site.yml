@@ -1,0 +1,22 @@
+name: "wazeuh-clermont-senlis"
+output_dir: "docs"
+navbar:
+  title: "Wazeuh — Clermont vs Senlis"
+  left:
+    - text: "Accueil"
+      href: index.html
+    - text: "Données"
+      href: 01_donnees.html
+    - text: "Analyse vecteur"
+      href: 02_vecteur.html
+    - text: "Analyse raster"
+      href: 03_raster.html
+    - text: "Conclusion"
+      href: 04_conclusion.html
+output:
+  html_document:
+    theme: cosmo
+    highlight: tango
+    toc: true
+    toc_float: true
+    code_folding: hide

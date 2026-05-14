@@ -1,0 +1,138 @@
+---
+title: "Analyse raster"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+library(sf)
+library(mapsf)
+library(terra)
+library(happign)
+clermont     <- st_read("base.gpkg", "commune_clermont", quiet = TRUE)
+senlis       <- st_read("base.gpkg", "commune_senlis",   quiet = TRUE)
+car_clermont <- st_read("base.gpkg", "carreaux_clermont", quiet = TRUE)
+car_senlis   <- st_read("base.gpkg", "carreaux_senlis",   quiet = TRUE)
+```
+
+# Source raster : orthophotos IGN
+
+Pour caractériser l'occupation du sol des deux communes, nous mobilisons les **orthophotos haute résolution de l'IGN**, téléchargées dynamiquement via le package `happign`. Ces images aériennes en couleur réelle (RVB) permettent de distinguer visuellement le bâti (toits, voiries) de la végétation (espaces verts, forêts).
+
+## Téléchargement
+
+```{r eval=FALSE}
+library(happign)
+library(terra)
+
+r_clermont <- get_wms_raster(clermont,
+                             layer = "ORTHOIMAGERY.ORTHOPHOTOS",
+                             res = 10, crs = 2154, rgb = TRUE,
+                             filename = "ortho_clermont.tif",
+                             overwrite = TRUE)
+
+r_senlis <- get_wms_raster(senlis,
+                           layer = "ORTHOIMAGERY.ORTHOPHOTOS",
+                           res = 10, crs = 2154, rgb = TRUE,
+                           filename = "ortho_senlis.tif",
+                           overwrite = TRUE)
+```
+
+# Visualisation des orthophotos
+
+```{r}
+r_cl <- rast("ortho_clermont.tif")
+r_se <- rast("ortho_senlis.tif")
+
+r_cl <- crop(r_cl, vect(clermont), mask = TRUE)
+r_se <- crop(r_se, vect(senlis),   mask = TRUE)
+
+par(mfrow = c(1, 2))
+plotRGB(r_cl, main = "Orthophoto - Clermont")
+plotRGB(r_se, main = "Orthophoto - Senlis")
+par(mfrow = c(1, 1))
+```
+
+# Traitement : conversion en niveaux de gris
+
+On convertit l'image RVB en **niveaux de gris** (moyenne arithmétique des 3 bandes Rouge / Vert / Bleu). Les pixels clairs correspondent généralement au bâti, les pixels sombres à la végétation.
+
+```{r}
+r_cl_gris <- mean(r_cl[[1:3]])
+r_se_gris <- mean(r_se[[1:3]])
+
+par(mfrow = c(1, 2))
+plot(r_cl_gris, main = "Niveaux de gris - Clermont", col = grey(0:255/255))
+plot(r_se_gris, main = "Niveaux de gris - Senlis", col = grey(0:255/255))
+par(mfrow = c(1, 1))
+```
+
+# Seuillage : bâti vs végétation
+
+Nous appliquons un **seuil binaire à 100** sur les niveaux de gris : tout pixel > 100 est classé comme bâti (clair), tout pixel ≤ 100 comme végétation (sombre).
+
+```{r}
+r_cl_seuil <- r_cl_gris > 100rmarkdown::render_site()
+r_se_seuil <- r_se_gris > 100
+
+par(mfrow = c(1, 2))
+plot(r_cl_seuil, main = "Bâti (vert) vs végétation (beige)\nClermont",
+     col = c("darkgreen", "beige"))
+plot(r_se_seuil, main = "Bâti (vert) vs végétation (beige)\nSenlis",
+     col = c("darkgreen", "beige"))
+par(mfrow = c(1, 1))
+```
+
+# Croisement raster × vecteur
+
+L'intérêt principal de cette analyse raster est de **caractériser chaque carreau Filosofi** par son taux de bâti. On extrait pour chaque carreau la moyenne du masque binaire (= proportion de pixels bâtis).
+
+```{r}
+car_clermont$pct_bati <- terra::extract(r_cl_seuil, vect(car_clermont),
+                                        fun = mean, na.rm = TRUE)[, 2] * 100
+car_senlis$pct_bati   <- terra::extract(r_se_seuil, vect(car_senlis),
+                                        fun = mean, na.rm = TRUE)[, 2] * 100
+
+par(mfrow = c(1, 2))
+mf_map(car_clermont, var = "pct_bati", type = "choro",
+       nbreaks = 5, pal = rev(gray.colors(5)), border = "white",
+       leg_title = "% de bâti", leg_pos = "topleft")
+mf_layout(title = "Densité du bâti - Clermont", credits = "IGN | Wazeuh")
+
+mf_map(car_senlis, var = "pct_bati", type = "choro",
+       nbreaks = 5, pal = rev(gray.colors(5)), border = "white",
+       leg_title = "% de bâti", leg_pos = "topleft")
+mf_layout(title = "Densité du bâti - Senlis", credits = "IGN | Wazeuh")
+par(mfrow = c(1, 1))
+```
+
+# Lecture
+
+Le **croisement entre l'analyse vecteur (Filosofi) et l'analyse raster (orthophotos)** révèle un fait essentiel : à Clermont, les carreaux où le taux de pauvreté est élevé correspondent globalement aux zones où la densité de bâti est la plus forte (cœur urbain, habitat collectif). À Senlis, en revanche, les carreaux à fort taux de pauvreté sont **isolés** dans des secteurs à bâti dense, entourés majoritairement de zones pavillonnaires aérées ou de forêt.
+
+L'analyse raster confirme donc la lecture vecteur : **la pauvreté est associée au bâti dense**, mais selon des configurations spatiales différentes — diffuse à Clermont, concentrée à Senlis.
+
+# Schéma de géotraitement raster
+
+```
+Orthophoto IGN (RGB, 10m)
+        │
+        │ st_transform → Lambert 93
+        ▼
+Reprojection
+        │
+        │ crop + mask
+        ▼
+Découpage sur la commune
+        │
+        │ mean des 3 bandes
+        ▼
+Niveaux de gris
+        │
+        │ seuillage > 100
+        ▼
+Masque binaire bâti / végétation
+        │
+        │ terra::extract sur les carreaux
+        ▼
+% de bâti par carreau Filosofi
+```

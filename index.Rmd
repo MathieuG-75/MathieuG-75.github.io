@@ -1,0 +1,37 @@
+---
+title: "Commune pauvre, commune riche ?"
+subtitle: "Clermont vs Senlis — Analyse SIG infra-communale"
+author: "Groupe Wazeuh — Mathis & Dorian"
+date: "L3 Géographie & Aménagement — Sorbonne Université, 2026"
+---
+
+# Bienvenue
+
+Ce site présente notre analyse comparée des communes de **Clermont (60157)** et **Senlis (60612)**, deux communes proches géographiquement (département de l'Oise, région Hauts-de-France) mais aux profils socio-économiques contrastés.
+
+# Problématique
+
+> **Dans quelle mesure l'opposition socio-économique entre une commune populaire (Clermont) et une commune historiquement aisée (Senlis) se confirme-t-elle à l'échelle infra-communale ?**
+
+Clermont est une sous-préfecture industrielle d'environ 10 700 habitants, marquée par un tissu urbain dense et une part importante de logement social. Senlis, ancienne cité royale de 16 000 habitants, conserve un patrimoine historique remarquable et une population globalement plus aisée.
+
+L'enjeu de notre analyse est de vérifier si cette opposition perçue se traduit cartographiquement, à l'échelle fine des **carreaux Filosofi de 200×200 mètres**.
+
+# Démarche
+
+Nous mobilisons trois grandes catégories de traitements :
+
+- **Géotraitements vecteur** : limites communales (API IGN), carreaux Filosofi 200m (INSEE 2019), classification typologique et cartes choroplèthes
+- **Géotraitements raster** : orthophotos IGN, conversion en niveaux de gris, seuillage pour séparer bâti et végétation
+- **Croisement** des informations rasters et vecteurs pour caractériser chaque carreau Filosofi
+
+L'analyse est entièrement reproductible sous **R** : le même script s'applique aux deux communes, ce qui rend la comparaison rigoureuse et traçable.
+
+# Navigation
+
+Utilisez le menu en haut pour parcourir les sections :
+
+- **Données** — sources, formats, traitements préparatoires
+- **Analyse vecteur** — pauvreté et niveau de vie par carreau
+- **Analyse raster** — occupation du sol, densité du bâti
+- **Conclusion** — synthèse et limites

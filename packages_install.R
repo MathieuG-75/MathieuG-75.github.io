@@ -1,0 +1,6 @@
+getwd()
+install.packages("sf")
+install.packages("terra")
+install.packages("mapsf")
+install.packages("happign")
+install.packages("imager")
