@@ -595,6 +595,58 @@ Masque binaire bâti / végétation
         ▼
 % de bâti par carreau Filosofi</code></pre>
 </div>
+<div id="jointure-vecteur-raster-pauvreté-et-densité-du-bâti"
+class="section level1">
+<h1>Jointure vecteur × raster : pauvreté et densité du bâti</h1>
+<p>L’intérêt du croisement raster/vecteur est de tester si la
+<strong>densité du bâti</strong> (issue des orthophotos) est corrélée au
+<strong>taux de pauvreté</strong> (issu de Filosofi). On dispose déjà de
+<code>pct_bati</code> calculé précédemment.</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" tabindex="-1"></a><span class="fu">library</span>(ggplot2)</span>
+<span id="cb11-2"><a href="#cb11-2" tabindex="-1"></a></span>
+<span id="cb11-3"><a href="#cb11-3" tabindex="-1"></a><span class="co"># Clermont</span></span>
+<span id="cb11-4"><a href="#cb11-4" tabindex="-1"></a>gg_cl <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(car_clermont, <span class="fu">aes</span>(<span class="at">x =</span> pct_bati, <span class="at">y =</span> tx_pauvrete)) <span class="sc">+</span></span>
+<span id="cb11-5"><a href="#cb11-5" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">alpha =</span> <span class="fl">0.6</span>, <span class="at">color =</span> <span class="st">&quot;#e63946&quot;</span>) <span class="sc">+</span></span>
+<span id="cb11-6"><a href="#cb11-6" tabindex="-1"></a>  <span class="fu">geom_smooth</span>(<span class="at">method =</span> <span class="st">&quot;lm&quot;</span>, <span class="at">se =</span> <span class="cn">TRUE</span>, <span class="at">color =</span> <span class="st">&quot;black&quot;</span>) <span class="sc">+</span></span>
+<span id="cb11-7"><a href="#cb11-7" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">&quot;Clermont — Bâti vs Pauvreté&quot;</span>,</span>
+<span id="cb11-8"><a href="#cb11-8" tabindex="-1"></a>       <span class="at">x =</span> <span class="st">&quot;% de bâti par carreau&quot;</span>,</span>
+<span id="cb11-9"><a href="#cb11-9" tabindex="-1"></a>       <span class="at">y =</span> <span class="st">&quot;Taux de pauvreté (%)&quot;</span>) <span class="sc">+</span></span>
+<span id="cb11-10"><a href="#cb11-10" tabindex="-1"></a>  <span class="fu">theme_minimal</span>()</span>
+<span id="cb11-11"><a href="#cb11-11" tabindex="-1"></a></span>
+<span id="cb11-12"><a href="#cb11-12" tabindex="-1"></a><span class="co"># Senlis</span></span>
+<span id="cb11-13"><a href="#cb11-13" tabindex="-1"></a>gg_se <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(car_senlis, <span class="fu">aes</span>(<span class="at">x =</span> pct_bati, <span class="at">y =</span> tx_pauvrete)) <span class="sc">+</span></span>
+<span id="cb11-14"><a href="#cb11-14" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">alpha =</span> <span class="fl">0.6</span>, <span class="at">color =</span> <span class="st">&quot;#2a9d8f&quot;</span>) <span class="sc">+</span></span>
+<span id="cb11-15"><a href="#cb11-15" tabindex="-1"></a>  <span class="fu">geom_smooth</span>(<span class="at">method =</span> <span class="st">&quot;lm&quot;</span>, <span class="at">se =</span> <span class="cn">TRUE</span>, <span class="at">color =</span> <span class="st">&quot;black&quot;</span>) <span class="sc">+</span></span>
+<span id="cb11-16"><a href="#cb11-16" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">&quot;Senlis — Bâti vs Pauvreté&quot;</span>,</span>
+<span id="cb11-17"><a href="#cb11-17" tabindex="-1"></a>       <span class="at">x =</span> <span class="st">&quot;% de bâti par carreau&quot;</span>,</span>
+<span id="cb11-18"><a href="#cb11-18" tabindex="-1"></a>       <span class="at">y =</span> <span class="st">&quot;Taux de pauvreté (%)&quot;</span>) <span class="sc">+</span></span>
+<span id="cb11-19"><a href="#cb11-19" tabindex="-1"></a>  <span class="fu">theme_minimal</span>()</span>
+<span id="cb11-20"><a href="#cb11-20" tabindex="-1"></a></span>
+<span id="cb11-21"><a href="#cb11-21" tabindex="-1"></a><span class="fu">library</span>(patchwork)</span>
+<span id="cb11-22"><a href="#cb11-22" tabindex="-1"></a>gg_cl <span class="sc">+</span> gg_se</span></code></pre></div>
+<p><img src="03_raster_files/figure-html/unnamed-chunk-6-1.png" alt="" width="960" /></p>
+<div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" tabindex="-1"></a>cor_cl <span class="ot">&lt;-</span> <span class="fu">cor</span>(car_clermont<span class="sc">$</span>pct_bati, car_clermont<span class="sc">$</span>tx_pauvrete, <span class="at">use =</span> <span class="st">&quot;complete.obs&quot;</span>)</span>
+<span id="cb12-2"><a href="#cb12-2" tabindex="-1"></a>cor_se <span class="ot">&lt;-</span> <span class="fu">cor</span>(car_senlis<span class="sc">$</span>pct_bati,   car_senlis<span class="sc">$</span>tx_pauvrete,   <span class="at">use =</span> <span class="st">&quot;complete.obs&quot;</span>)</span>
+<span id="cb12-3"><a href="#cb12-3" tabindex="-1"></a></span>
+<span id="cb12-4"><a href="#cb12-4" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">&quot;Corrélation bâti/pauvreté — Clermont :&quot;</span>, <span class="fu">round</span>(cor_cl, <span class="dv">2</span>), <span class="st">&quot;</span><span class="sc">\n</span><span class="st">&quot;</span>)</span></code></pre></div>
+<pre><code>## Corrélation bâti/pauvreté — Clermont : 0.32</code></pre>
+<div class="sourceCode" id="cb14"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">&quot;Corrélation bâti/pauvreté — Senlis   :&quot;</span>, <span class="fu">round</span>(cor_se, <span class="dv">2</span>), <span class="st">&quot;</span><span class="sc">\n</span><span class="st">&quot;</span>)</span></code></pre></div>
+<pre><code>## Corrélation bâti/pauvreté — Senlis   : 0.1</code></pre>
+<div id="lecture-1" class="section level2">
+<h2>Lecture</h2>
+<p>À <strong>Clermont</strong>, la corrélation entre densité du bâti et
+taux de pauvreté est positive : les carreaux les plus denses sont aussi
+les plus pauvres, ce qui traduit une concentration de la pauvreté dans
+le cœur urbain (habitat collectif, logement social).</p>
+<p>À <strong>Senlis</strong>, la relation est plus faible voire inversée
+: les carreaux denses ne sont pas nécessairement les plus pauvres, ce
+qui reflète la présence d’un centre historique aisé à forte densité
+bâtie.</p>
+<p>Ce croisement confirme que <strong>la forme urbaine seule ne
+détermine pas le niveau de vie</strong> — le contexte territorial et
+l’histoire sociale de chaque commune jouent un rôle déterminant.</p>
+</div>
+</div>
 
 
 
