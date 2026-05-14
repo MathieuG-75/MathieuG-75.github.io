@@ -1,0 +1,101 @@
+---
+title: "Analyse vecteur"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+library(sf)
+library(mapsf)
+clermont     <- st_read("base.gpkg", "commune_clermont",  quiet = TRUE)
+senlis       <- st_read("base.gpkg", "commune_senlis",    quiet = TRUE)
+car_clermont <- st_read("base.gpkg", "carreaux_clermont", quiet = TRUE)
+car_senlis   <- st_read("base.gpkg", "carreaux_senlis",   quiet = TRUE)
+```
+
+# Découpage spatial des carreaux Filosofi
+
+Les carreaux Filosofi (200m × 200m) couvrent l'ensemble du territoire national. Pour notre analyse, nous les avons **intersectés avec les contours communaux** de Clermont et Senlis afin de ne conserver que les carreaux appartenant à chaque commune.
+
+```{r}
+cat("Carreaux Clermont :", nrow(car_clermont), "\n")
+cat("Carreaux Senlis   :", nrow(car_senlis), "\n")
+```
+
+# Statistiques descriptives
+
+```{r}
+summary(car_clermont$ind_inc)
+summary(car_senlis$ind_inc)
+```
+
+# Cartes choroplèthes
+
+```{r fig.width=10}
+par(mfrow = c(1, 2))
+mf_map(car_clermont, var = "ind_inc", type = "choro",
+       nbreaks = 5, pal = "Reds", border = "white",
+       leg_title = "Revenu médian", leg_pos = "topleft")
+mf_layout(title = "Revenu médian - Clermont", credits = "Filosofi | Wazeuh")
+
+mf_map(car_senlis, var = "ind_inc", type = "choro",
+       nbreaks = 5, pal = "Reds", border = "white",
+       leg_title = "Revenu médian", leg_pos = "topleft")
+mf_layout(title = "Revenu médian - Senlis", credits = "Filosofi | Wazeuh")
+par(mfrow = c(1, 1))
+```
+
+# Lecture
+
+Clermont présente une distribution des revenus plus homogène et globalement plus faible que Senlis. À Senlis, on observe une forte disparité spatiale : les carreaux les plus riches se concentrent dans les quartiers résidentiels au nord, tandis que les carreaux les plus pauvres forment des îlots isolés dans le centre-ville.
+# Schéma de géotraitement vecteur
+
+```{r echo=FALSE}
+htmltools::HTML('
+<div style="font-family: monospace; background: #f8f9fa; border-radius: 8px; padding: 20px; margin: 20px 0;">
+
+<div style="text-align:center;">
+
+<div style="background:#2a9d8f; color:white; padding:10px 20px; border-radius:6px; display:inline-block; font-weight:bold;">
+  Carreaux Filosofi 200m (INSEE 2019)<br>
+  <small>Format : .gpkg — CRS : Lambert 93</small>
+</div>
+
+<div style="margin:8px 0; font-size:20px;">↓</div>
+
+<div style="background:#457b9d; color:white; padding:10px 20px; border-radius:6px; display:inline-block; font-weight:bold;">
+  Limites communales (IGN)<br>
+  <small>Clermont (60157) &amp; Senlis (60612)</small>
+</div>
+
+<div style="margin:8px 0; font-size:20px;">↓</div>
+
+<div style="background:#e9c46a; color:#333; padding:10px 20px; border-radius:6px; display:inline-block; font-weight:bold;">
+  🔧 Intersection spatiale (st_intersection)<br>
+  <small>Découpage des carreaux sur l\'emprise communale</small>
+</div>
+
+<div style="margin:8px 0; font-size:20px;">↓</div>
+
+<div style="background:#e9c46a; color:#333; padding:10px 20px; border-radius:6px; display:inline-block; font-weight:bold;">
+  🔧 Sélection des variables (ind_inc, tx_pauvrete, niv_vie_moy)<br>
+  <small>Filtrage des colonnes Filosofi pertinentes</small>
+</div>
+
+<div style="margin:8px 0; font-size:20px;">↓</div>
+
+<div style="background:#e9c46a; color:#333; padding:10px 20px; border-radius:6px; display:inline-block; font-weight:bold;">
+  🔧 Statistiques descriptives (summary)<br>
+  <small>Distribution des revenus par commune</small>
+</div>
+
+<div style="margin:8px 0; font-size:20px;">↓</div>
+
+<div style="background:#e63946; color:white; padding:10px 20px; border-radius:6px; display:inline-block; font-weight:bold;">
+  🗺️ Cartes choroplèthes (mapsf)<br>
+  <small>Revenu médian par carreau — Clermont vs Senlis</small>
+</div>
+
+</div>
+</div>
+')
+```
