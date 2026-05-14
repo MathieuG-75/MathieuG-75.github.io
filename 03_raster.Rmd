@@ -71,7 +71,7 @@ par(mfrow = c(1, 1))
 Nous appliquons un **seuil binaire à 100** sur les niveaux de gris : tout pixel > 100 est classé comme bâti (clair), tout pixel ≤ 100 comme végétation (sombre).
 
 ```{r}
-r_cl_seuil <- r_cl_gris > 100rmarkdown::render_site()
+r_cl_seuil <- r_cl_gris > 100
 r_se_seuil <- r_se_gris > 100
 
 par(mfrow = c(1, 2))
@@ -136,3 +136,87 @@ Masque binaire bâti / végétation
         ▼
 % de bâti par carreau Filosofi
 ```
+# Jointure vecteur × raster : pauvreté et densité du bâti
+
+L'intérêt du croisement raster/vecteur est de tester si la **densité du bâti** (issue des orthophotos) est corrélée au **taux de pauvreté** (issu de Filosofi). On dispose déjà de `pct_bati` calculé précédemment.
+
+```{r fig.width=10}
+library(ggplot2)
+
+# Clermont
+gg_cl <- ggplot(car_clermont, aes(x = pct_bati, y = tx_pauvrete)) +
+  geom_point(alpha = 0.6, color = "#e63946") +
+  geom_smooth(method = "lm", se = TRUE, color = "black") +
+  labs(title = "Clermont — Bâti vs Pauvreté",
+       x = "% de bâti par carreau",
+       y = "Taux de pauvreté (%)") +
+  theme_minimal()
+
+# Senlis
+gg_se <- ggplot(car_senlis, aes(x = pct_bati, y = tx_pauvrete)) +
+  geom_point(alpha = 0.6, color = "#2a9d8f") +
+  geom_smooth(method = "lm", se = TRUE, color = "black") +
+  labs(title = "Senlis — Bâti vs Pauvreté",
+       x = "% de bâti par carreau",
+       y = "Taux de pauvreté (%)") +
+  theme_minimal()
+
+library(patchwork)
+gg_cl + gg_se
+```
+
+```{r}
+cor_cl <- cor(car_clermont$pct_bati, car_clermont$tx_pauvrete, use = "complete.obs")
+cor_se <- cor(car_senlis$pct_bati,   car_senlis$tx_pauvrete,   use = "complete.obs")
+
+cat("Corrélation bâti/pauvreté — Clermont :", round(cor_cl, 2), "\n")
+cat("Corrélation bâti/pauvreté — Senlis   :", round(cor_se, 2), "\n")
+```
+
+## Lecture
+
+À **Clermont**, la corrélation entre densité du bâti et taux de pauvreté est positive : les carreaux les plus denses sont aussi les plus pauvres, ce qui traduit une concentration de la pauvreté dans le cœur urbain (habitat collectif, logement social).
+
+À **Senlis**, la relation est plus faible voire inversée : les carreaux denses ne sont pas nécessairement les plus pauvres, ce qui reflète la présence d'un centre historique aisé à forte densité bâtie.
+
+Ce croisement confirme que **la forme urbaine seule ne détermine pas le niveau de vie** — le contexte territorial et l'histoire sociale de chaque commune jouent un rôle déterminant.
+# Schéma de géotraitement raster
+
+```{r echo=FALSE, results='asis'}
+cat('
+<h3>Schéma de géotraitement raster</h3>
+
+<p><b>Raster de référence</b><br>
+Ex : occupation du sol / MNT / imagerie<br>
+Format : .tif — CRS : Lambert 93</p>
+
+<p>↓</p>
+
+<p><b>Limites communales (IGN)</b><br>
+Clermont (60157) & Senlis (60612)</p>
+
+<p>↓</p>
+
+<p><b>🔧 Découpage du raster (crop / mask)</b><br>
+Extraction du raster sur l’emprise communale</p>
+
+<p>↓</p>
+
+<p><b>🔧 Reprojection (si nécessaire)</b><br>
+Harmonisation du CRS avec les autres données</p>
+
+<p>↓</p>
+
+<p><b>🔧 Calculs raster</b><br>
+Indices, moyennes, classifications</p>
+
+<p>↓</p>
+
+<p><b>🔧 Extraction de valeurs (extract)</b><br>
+Statistiques raster par commune</p>
+
+<p>↓</p>
+
+<p><b>🗺️ Cartographie raster (mapsf / tmap)</b><br>
+Visualisation des résultats</p>
+')
